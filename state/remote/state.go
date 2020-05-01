@@ -69,13 +69,13 @@ func (s *State) WriteStateForMigration(f *statefile.File, force bool) error {
 	// in the backend. If force is specified we skip verifications and hand the
 	// context off to the client to use when persitence operations actually take place.
 	c, isForcePusher := s.Client.(ClientForcePusher)
-	if !force {
+	if force && isForcePusher {
+		c.EnableForcePush()
+	} else {
 		checkFile := statefile.New(s.state, s.lineage, s.serial)
 		if err := statemgr.CheckValidImport(f, checkFile); err != nil {
 			return err
 		}
-	} else if isForcePusher {
-		c.EnableForcePush()
 	}
 
 	// We create a deep copy of the state here, because the caller also has

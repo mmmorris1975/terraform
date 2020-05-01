@@ -99,7 +99,8 @@ func (r *remoteClient) Delete() error {
 	return nil
 }
 
-// EnableForcePush to allow the remote client to overwrite state.
+// EnableForcePush to allow the remote client to overwrite state
+// by implementing remote.ClientForcePusher
 func (r *remoteClient) EnableForcePush() {
 	r.forcePush = true
 }

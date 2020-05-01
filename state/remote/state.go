@@ -21,6 +21,15 @@ type State struct {
 
 	Client Client
 
+	// We track two pieces of meta data in addition to the state itself:
+	//
+	// lineage - the state's unique ID
+	// serial  - the monotonic counter of "versions" of the state
+	//
+	// Both of these (along with state) have a sister field
+	// that represents the values read in from an existing source.
+	// All three of these values are used to determine if the new
+	// state has changed from an existing state we read in.
 	lineage, readLineage string
 	serial, readSerial   uint64
 	state, readState     *states.State
@@ -176,6 +185,10 @@ func (s *State) PersistState() error {
 
 	// After we've successfully persisted, what we just wrote is our new
 	// reference state until someone calls RefreshState again.
+	// We've potentially overwritten (via force) the state, lineage
+	// and / or serial (and serial was incremented) so we copy over all
+	// three fields so everything matches the new state and a subsequent
+	// operation would correctly detect no changes to the lineage, serial or state.
 	s.readState = s.state.DeepCopy()
 	s.readLineage = s.lineage
 	s.readSerial = s.serial

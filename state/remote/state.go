@@ -3,7 +3,6 @@ package remote
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"sync"
 
 	uuid "github.com/hashicorp/go-uuid"
@@ -71,14 +70,12 @@ func (s *State) WriteStateForMigration(f *statefile.File, force bool) error {
 	// context off to the client to use when persitence operations actually take place.
 	c, isForcePusher := s.Client.(ClientForcePusher)
 	if !force {
-		log.Print("[TRACE] state/remote: force push not specified")
 		checkFile := statefile.New(s.state, s.lineage, s.serial)
 		if err := statemgr.CheckValidImport(f, checkFile); err != nil {
 			return err
 		}
 	} else if isForcePusher {
 		c.EnableForcePush()
-		log.Printf("[TRACE] state/remote: force push enabled %#v", c)
 	}
 
 	// We create a deep copy of the state here, because the caller also has
@@ -143,7 +140,6 @@ func (s *State) PersistState() error {
 		stateUnchanged := statefile.StatesMarshalEqual(s.state, s.readState)
 		if stateUnchanged && lineageUnchanged && serialUnchanged {
 			// If the state, lineage or serial haven't changed at all then we have nothing to do.
-			log.Print("[TRACE] state/remote: not persisting, no changes detected")
 			return nil
 		}
 		s.serial++
@@ -173,7 +169,6 @@ func (s *State) PersistState() error {
 		return err
 	}
 
-	log.Print("[TRACE] state/remote: persisting new state via client")
 	err = s.Client.Put(buf.Bytes())
 	if err != nil {
 		return err
@@ -184,7 +179,6 @@ func (s *State) PersistState() error {
 	s.readState = s.state.DeepCopy()
 	s.readLineage = s.lineage
 	s.readSerial = s.serial
-	log.Print("[TRACE] state/remote: persist complete")
 	return nil
 }
 
